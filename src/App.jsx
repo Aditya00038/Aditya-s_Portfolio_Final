@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TypeAnimation } from 'react-type-animation';
 import { 
@@ -10,6 +10,8 @@ import {
   FaEnvelope,
   FaMapMarkerAlt,
   FaPhone,
+  FaMobileAlt,
+  FaPhoneAlt,
   FaExternalLinkAlt,
   FaCode,
   FaCertificate,
@@ -31,14 +33,7 @@ import {
   FaCodeBranch,
   FaLaptopCode,
   FaUniversity,
-  FaBook,
-  FaMusic,
-  FaPlay,
-  FaPause,
-  FaVolumeUp,
-  FaVolumeMute,
-  FaStepForward,
-  FaStepBackward
+  FaBook
 } from 'react-icons/fa';
 import { 
   SiReact, 
@@ -78,118 +73,20 @@ import python1LearnImg from './assets/certificates/python1-learn.png';
 import python2LearnImg from './assets/certificates/python2-learn.png';
 import webdevLearnImg from './assets/certificates/webdev-learn.png';
 import sqlLearnImg from './assets/certificates/sql-learn.png';
-import endOfBeginMusic from './assets/endofbegin.mp3';
-import aizenThemeMusic from './assets/treachery_aizen_theme.mp3';
-import babyBlueMusic from './assets/babyblue.mp3';
-import mobstaMusic from './assets/mobsta.mp3';
 import './App.css';
 
 function App() {
-  const [showWelcome, setShowWelcome] = useState(true);
   const [activeSection, setActiveSection] = useState('home');
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeTab, setActiveTab] = useState('github'); // 'github' or 'leetcode'
   const [showAllCerts, setShowAllCerts] = useState(false);
-  const [aboutTab, setAboutTab] = useState('opensource'); // 'opensource', 'hackathon', 'education'
+  const [aboutTab, setAboutTab] = useState('education'); // 'hackathon', 'education'
   const [projectLikes, setProjectLikes] = useState({
     0: { liked: false, count: 47 },
     1: { liked: false, count: 23 },
     2: { liked: false, count: 35 }
   });
-
-  // Music player state
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [isMuted, setIsMuted] = useState(false);
-  const [currentTrack, setCurrentTrack] = useState(0);
-  const [showMusicPlayer, setShowMusicPlayer] = useState(false);
-  const [volume, setVolume] = useState(0.15);
   const [showMessagePopup, setShowMessagePopup] = useState(false);
-  const audioRef = useRef(null);
-  const hoorayRef = useRef(null);
-
-  // Music tracks playlist
-  const musicTracks = [
-    { name: 'Baby Blue', url: babyBlueMusic },
-    { name: 'End of Beginning', url: endOfBeginMusic },
-    { name: 'Aizen Theme', url: aizenThemeMusic },
-    { name: 'Mobsta', url: mobstaMusic },
-  ];
-
-  // Handle entering site - starts music
-  const handleEnterSite = () => {
-    setShowWelcome(false);
-    if (audioRef.current) {
-      audioRef.current.play().then(() => {
-        setIsPlaying(true);
-      }).catch(() => {
-        setIsPlaying(false);
-      });
-    }
-  };
-
-  // Initialize audio elements
-  useEffect(() => {
-    audioRef.current = new Audio(musicTracks[0].url);
-    audioRef.current.loop = false;
-    audioRef.current.volume = volume;
-    
-    // Hooray sound effect
-    hoorayRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
-    hoorayRef.current.volume = 0.7;
-    hoorayRef.current.load();
-
-    audioRef.current.addEventListener('ended', handleNextTrack);
-
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.removeEventListener('ended', handleNextTrack);
-        audioRef.current.pause();
-      }
-    };
-  }, []);
-
-  // Update audio source when track changes
-  useEffect(() => {
-    if (audioRef.current) {
-      const wasPlaying = isPlaying;
-      audioRef.current.pause();
-      audioRef.current.src = musicTracks[currentTrack].url;
-      audioRef.current.volume = volume;
-      if (wasPlaying) {
-        audioRef.current.play().catch(e => console.log('Autoplay prevented'));
-      }
-    }
-  }, [currentTrack]);
-
-  // Update volume
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = isMuted ? 0 : volume;
-    }
-  }, [volume, isMuted]);
-
-  const togglePlay = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play().catch(e => console.log('Autoplay prevented'));
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
-  };
-
-  const handleVolumeChange = (e) => {
-    const newVolume = parseFloat(e.target.value);
-    setVolume(newVolume);
-    if (newVolume > 0 && isMuted) {
-      setIsMuted(false);
-    }
-  };
 
   // Handle contact form submission
   const handleFormSubmit = (e) => {
@@ -202,34 +99,10 @@ function App() {
     }, 3000);
   };
 
-  const handleNextTrack = () => {
-    setCurrentTrack((prev) => (prev + 1) % musicTracks.length);
-  };
-
-  const handlePrevTrack = () => {
-    setCurrentTrack((prev) => (prev - 1 + musicTracks.length) % musicTracks.length);
-  };
-
-  // Play hooray sound
-  const playHooray = () => {
-    try {
-      // Create a new audio instance each time for reliability
-      const hooray = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
-      hooray.volume = 0.7;
-      hooray.play().catch(e => console.log('Sound effect blocked:', e));
-    } catch (e) {
-      console.log('Audio error:', e);
-    }
-  };
-
   // Handle project like toggle
   const handleProjectLike = (index) => {
     setProjectLikes(prev => {
       const currentLikes = prev[index];
-      // Play hooray sound when liking (not unliking)
-      if (!currentLikes.liked) {
-        playHooray();
-      }
       return {
         ...prev,
         [index]: {
@@ -670,36 +543,6 @@ function App() {
 
   return (
     <div className="portfolio">
-      {/* Welcome Overlay */}
-      <AnimatePresence>
-        {showWelcome && (
-          <motion.div 
-            className="welcome-overlay"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <motion.div 
-              className="welcome-content"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-            >
-              <h1>Welcome</h1>
-              <p>Click to enter & enjoy the music</p>
-              <motion.button 
-                className="enter-btn"
-                onClick={handleEnterSite}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Enter Site
-              </motion.button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Message Sent Toast Notification */}
       <AnimatePresence>
         {showMessagePopup && (
@@ -724,98 +567,6 @@ function App() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Music Player Floating Card */}
-      <div className={`music-player-container ${showMusicPlayer ? 'expanded' : ''}`}>
-        <motion.button 
-          className="music-toggle-btn"
-          onClick={() => setShowMusicPlayer(!showMusicPlayer)}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <FaMusic />
-        </motion.button>
-        
-        <AnimatePresence>
-          {showMusicPlayer && (
-            <motion.div 
-              className="spotify-card"
-              initial={{ opacity: 0, y: 20, scale: 0.8 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.8 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="spotify-top">
-                <div className="spotify-pfp">
-                  <div className={`spotify-playing ${isPlaying ? 'active' : ''}`}>
-                    <div className="greenline line-1" />
-                    <div className="greenline line-2" />
-                    <div className="greenline line-3" />
-                    <div className="greenline line-4" />
-                    <div className="greenline line-5" />
-                  </div>
-                </div>
-                <div className="spotify-texts">
-                  <p className="spotify-title-1">{musicTracks[currentTrack].name}</p>
-                  <p className="spotify-title-2">Portfolio Vibes</p>
-                </div>
-              </div>
-              
-              <div className="spotify-progress">
-                <span className="spotify-time-text">0:00</span>
-                <div className="spotify-progress-bar">
-                  <div className="spotify-progress-fill" style={{ width: '0%' }} />
-                </div>
-                <span className="spotify-time-text">3:46</span>
-              </div>
-              
-              <div className="spotify-controls">
-                <div className="spotify-volume-group">
-                  <span className="spotify-volume-icon" onClick={toggleMute}>
-                    {isMuted ? <FaVolumeMute size={16} /> : <FaVolumeUp size={16} />}
-                  </span>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={isMuted ? 0 : volume}
-                    onChange={handleVolumeChange}
-                    className="spotify-volume-slider"
-                    style={{
-                      background: `linear-gradient(to right, #1db954 0%, #1db954 ${(isMuted ? 0 : volume) * 100}%, #5e5e5e ${(isMuted ? 0 : volume) * 100}%, #5e5e5e 100%)`
-                    }}
-                  />
-                </div>
-                <div className="spotify-playback-controls">
-                  <div className="spotify-control-btn" onClick={handlePrevTrack}>
-                    <FaStepBackward size={12} />
-                  </div>
-                  <div className="spotify-control-btn play-btn" onClick={togglePlay}>
-                    {isPlaying ? <FaPause size={16} /> : <FaPlay size={16} style={{ marginLeft: '2px' }} />}
-                  </div>
-                  <div className="spotify-control-btn" onClick={handleNextTrack}>
-                    <FaStepForward size={12} />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="spotify-track-list">
-                {musicTracks.map((track, index) => (
-                  <div 
-                    key={index}
-                    className={`spotify-track-item ${currentTrack === index ? 'active' : ''}`}
-                    onClick={() => setCurrentTrack(index)}
-                  >
-                    <span className="track-number">{index + 1}</span>
-                    <span className="track-name">{track.name}</span>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
 
       {/* Navigation */}
       <motion.nav 
@@ -871,7 +622,7 @@ function App() {
               <FaMapMarkerAlt /> Pune, Maharashtra, India
             </div>
             <div className="social-follow-btns">
-              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="social-btn linkedin">
+              <a href="https://www.linkedin.com/in/aditya-suryawanshi-20b60930a/" target="_blank" rel="noopener noreferrer" className="social-btn linkedin">
                 <svg className="svgIcon" viewBox="0 0 448 512" height="1.5em" xmlns="http://www.w3.org/2000/svg">
                   <path d="M100.3 448H7.4V148.9h92.9zM53.8 108.1C24.1 108.1 0 83.5 0 53.8a53.8 53.8 0 0 1 107.6 0c0 29.7-24.1 54.3-53.8 54.3zM447.9 448h-92.7V302.4c0-34.7-.7-79.2-48.3-79.2-48.3 0-55.7 37.7-55.7 76.7V448h-92.8V148.9h89.1v40.8h1.3c12.4-23.5 42.7-48.3 87.9-48.3 94 0 111.3 61.9 111.3 142.3V448z" />
                 </svg>
@@ -883,7 +634,7 @@ function App() {
                 </svg>
                 <span className="text">GitHub</span>
               </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="social-btn instagram">
+              <a href="https://www.instagram.com/_aditya_038/" target="_blank" rel="noopener noreferrer" className="social-btn instagram">
                 <svg className="svgIcon" viewBox="0 0 448 512" height="1.5em" xmlns="http://www.w3.org/2000/svg">
                   <path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z" />
                 </svg>
@@ -918,7 +669,7 @@ function App() {
               Driven by curiosity, I explore how data fuels intelligent systems and how AI can automate complex real-life tasks. I enjoy turning raw data into insights and writing code that becomes useful products. With interests spanning machine learning, analytics, and modern web development, I'm constantly expanding my skill set to build meaningful, scalable, and intelligent applications.
             </motion.p>
             <motion.div className="hero-buttons" variants={fadeInUp}>
-              <button type="button" className="resume-btn">
+              <a href="/Aditya Resume.pdf" download="Aditya Resume.pdf" className="resume-btn">
                 <span className="resume-btn__text">Resume</span>
                 <span className="resume-btn__icon">
                   <svg className="resume-svg" viewBox="0 0 35 35" xmlns="http://www.w3.org/2000/svg">
@@ -927,7 +678,7 @@ function App() {
                     <path d="M31.436,34.063H3.564A3.318,3.318,0,0,1,.25,30.749V22.011a1.25,1.25,0,0,1,2.5,0v8.738a.815.815,0,0,0,.814.814H31.436a.815.815,0,0,0,.814-.814V22.011a1.25,1.25,0,1,1,2.5,0v8.738A3.318,3.318,0,0,1,31.436,34.063Z" />
                   </svg>
                 </span>
-              </button>
+              </a>
             </motion.div>
           </motion.div>
         </div>
@@ -959,12 +710,6 @@ function App() {
           >
             <div className="about-tabs">
               <button 
-                className={`about-tab ${aboutTab === 'opensource' ? 'active' : ''}`}
-                onClick={() => setAboutTab('opensource')}
-              >
-                <FaLaptopCode /> Open Source
-              </button>
-              <button 
                 className={`about-tab ${aboutTab === 'education' ? 'active' : ''}`}
                 onClick={() => setAboutTab('education')}
               >
@@ -972,41 +717,6 @@ function App() {
               </button>
             </div>
           </motion.div>
-
-          {/* Open Source Content */}
-          {aboutTab === 'opensource' && (
-            <motion.div 
-              className="about-content"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="journey-card opensource-card">
-                <div className="journey-icon opensource-icon">
-                  <FaLaptopCode />
-                </div>
-                <h3>My Open Source Journey</h3>
-
-                <div className="journey-timeline">
-                  <div className="timeline-item">
-                    <div className="timeline-dot"></div>
-                    <div className="timeline-content">
-                      <div className="timeline-badge">🏆 Contributor</div>
-                      <h4>GSSoC 2024 - Open Source Contributor</h4>
-                      <p>Actively contributed to GirlScript Summer of Code as a dedicated contributor. Fixed bugs, implemented new features, and improved documentation across multiple repositories.</p>
-                      <div className="timeline-tags">
-                        <span className="tag">Bug Fixes</span>
-                        <span className="tag">Features</span>
-                        <span className="tag">Documentation</span>
-                        <span className="tag">Code Review</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
 
           {/* Education Content */}
           {aboutTab === 'education' && (
@@ -1017,63 +727,89 @@ function App() {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="journey-card education-card">
-                <div className="journey-icon education-icon">
-                  <FaUniversity />
-                </div>
-                <h3>My Education Journey</h3>
+              <div className="education-grid">
+                <motion.div 
+                  className="education-card current-edu"
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.1 }}
+                  whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                >
+                  <div className="edu-card-header">
+                    <div className="edu-status-badge">
+                      <span className="pulse-dot"></span>
+                      Currently Studying
+                    </div>
+                    <div className="edu-year">2024 - 2028</div>
+                  </div>
+                  <div className="edu-card-body">
+                    <div className="edu-logo-wrapper">
+                      <img src="https://play-lh.googleusercontent.com/TsNBFHfNVRjYO6ssNxZpsA_sbwUQYkGKhGsKYsCe4B8Tz5E0wlw-IfW7iUe0IOWSjmI=w600-h300-pc0xffffff-pd" alt="MIT AOE" className="edu-logo" />
+                    </div>
+                    <div className="edu-info">
+                      <h4>MIT Academy of Engineering</h4>
+                      <p className="edu-degree-title">B.Tech in Computer Science & Engineering</p>
+                      <p className="edu-description">Second Year (SY) student actively participating in hackathons and building innovative projects.</p>
+                    </div>
+                  </div>
+                  <div className="edu-card-footer">
+                    <span className="edu-location"><FaMapMarkerAlt /> Pune, Maharashtra</span>
+                  </div>
+                  <div className="edu-card-glow"></div>
+                </motion.div>
 
-                <div className="journey-timeline">
-                  <div className="timeline-item">
-                    <div className="timeline-dot"></div>
-                    <div className="timeline-content education-content">
-                      <img src="https://play-lh.googleusercontent.com/TsNBFHfNVRjYO6ssNxZpsA_sbwUQYkGKhGsKYsCe4B8Tz5E0wlw-IfW7iUe0IOWSjmI=w600-h300-pc0xffffff-pd" alt="MIT AOE" className="education-logo" />
-                      <div className="education-text">
-                        <div className="timeline-badge current">🎓 Current</div>
-                        <h4>MIT Academy of Engineering</h4>
-                        <p className="edu-degree">B.Tech in Computer Science & Engineering</p>
-                        <p>Second Year (SY) student actively participating in hackathons, open source contributions, and building innovative projects.</p>
-                        <div className="timeline-tags">
-                          <span className="tag">2023 - 2027</span>
-                          <span className="tag">Pune</span>
-                        </div>
-                      </div>
+                <motion.div 
+                  className="education-card"
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.2 }}
+                  whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                >
+                  <div className="edu-card-header">
+                    <div className="edu-badge hsc">📚 HSC</div>
+                    <div className="edu-year">2022 - 2024</div>
+                  </div>
+                  <div className="edu-card-body">
+                    <div className="edu-logo-wrapper">
+                      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQXExPajyuetpEPCMPP6bCpQhVFeEd7UElrbg&s" alt="Nowrosjee Wadia College" className="edu-logo" />
+                    </div>
+                    <div className="edu-info">
+                      <h4>Nowrosjee Wadia College</h4>
+                      <p className="edu-degree-title">Higher Secondary Certificate (11th-12th)</p>
+                      <p className="edu-description">Science stream with focus on Physics, Chemistry, and Mathematics.</p>
                     </div>
                   </div>
-                  <div className="timeline-item">
-                    <div className="timeline-dot"></div>
-                    <div className="timeline-content education-content">
-                      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQXExPajyuetpEPCMPP6bCpQhVFeEd7UElrbg&s" alt="Nowrosjee Wadia College" className="education-logo" />
-                      <div className="education-text">
-                        <div className="timeline-badge">📚 HSC</div>
-                        <h4>Nowrosjee Wadia College</h4>
-                        <p className="edu-degree">Higher Secondary Certificate (11th-12th)</p>
-                        <p>Science stream with focus on Physics, Chemistry, and Mathematics.</p>
-                        <div className="timeline-tags">
-                          <span className="tag">2021 - 2023</span>
-                          <span className="tag">Pune</span>
-                        </div>
-                      </div>
+                  <div className="edu-card-footer">
+                    <span className="edu-location"><FaMapMarkerAlt /> Pune, Maharashtra</span>
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  className="education-card"
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.3 }}
+                  whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                >
+                  <div className="edu-card-header">
+                    <div className="edu-badge ssc">🏅 SSC</div>
+                    <div className="edu-year">2017 - 2022</div>
+                  </div>
+                  <div className="edu-card-body">
+                    <div className="edu-logo-wrapper">
+                      <img src="https://www.schoolsuniverse.com/_next/image?url=https%3A%2F%2Fcdn.schoolsuniverse.com%2Fmedia%2Fuploads%2F2025-03-02-08-50-18-910400-download%2520-%25202025-03-02T141845.459.jfif&w=256&q=80" alt="New English School Ramanbaug" className="edu-logo" />
+                    </div>
+                    <div className="edu-info">
+                      <h4>New English School, Ramanbaug</h4>
+                      <p className="edu-degree-title">Secondary School Certificate (5th-10th)</p>
+                      <p className="edu-description"><strong>Kabaddi Player</strong> - Qualified for ZP level & selected for Mumbai Training Camp!</p>
                     </div>
                   </div>
-                  <div className="timeline-item">
-                    <div className="timeline-dot"></div>
-                    <div className="timeline-content education-content">
-                      <img src="https://www.schoolsuniverse.com/_next/image?url=https%3A%2F%2Fcdn.schoolsuniverse.com%2Fmedia%2Fuploads%2F2025-03-02-08-50-18-910400-download%2520-%25202025-03-02T141845.459.jfif&w=256&q=80" alt="New English School Ramanbaug" className="education-logo" />
-                      <div className="education-text">
-                        <div className="timeline-badge">🏅 SSC</div>
-                        <h4>New English School, Ramanbaug</h4>
-                        <p className="edu-degree">Secondary School Certificate (5th-10th)</p>
-                        <p><strong>Kabaddi Player</strong> - Qualified for ZP level & selected for Mumbai Training Camp!</p>
-                        <div className="timeline-tags">
-                          <span className="tag">2016 - 2021</span>
-                          <span className="tag">Pune</span>
-                          <span className="tag">Sports</span>
-                        </div>
-                      </div>
-                    </div>
+                  <div className="edu-card-footer">
+                    <span className="edu-location"><FaMapMarkerAlt /> Pune, Maharashtra</span>
+                    <span className="edu-tag sports">🏆 Sports Achievement</span>
                   </div>
-                </div>
+                </motion.div>
               </div>
             </motion.div>
           )}
@@ -1217,7 +953,7 @@ function App() {
                   className="skill-icon"
                   style={{ color: skill.color }}
                 >
-                  {skill.icon ? <skill.icon style={{ width: '100%', height: '100%' }} /> : <img src={skill.imgUrl} alt={skill.name} style={{ width: '100%', height: '100%', objectFit: 'contain', position: 'relative', top: '-8px' }} />}
+                  {skill.icon ? <skill.icon /> : <img src={skill.imgUrl} alt={skill.name} />}
                 </motion.div>
                 <span className="skill-name">{skill.name}</span>
               </motion.div>
@@ -1345,11 +1081,6 @@ function App() {
                       <span className="diff-label">Hard</span>
                       <span className="diff-value">{leetcodeStats.hardSolved}/{leetcodeStats.hardTotal}</span>
                     </div>
-                  </div>
-                  
-                  <div className="leetcode-badges-section">
-                    <span className="badges-label">Badges</span>
-                    <span className="badges-count">{leetcodeStats.badges}</span>
                   </div>
                 </div>
               </motion.div>
@@ -1537,13 +1268,13 @@ function App() {
               
               {/* Social Links */}
               <div className="contact-social-links">
-                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">
+                <a href="https://www.linkedin.com/in/aditya-suryawanshi-20b60930a/" target="_blank" rel="noopener noreferrer">
                   <FaLinkedinIn />
                 </a>
-                <a href="https://github.com" target="_blank" rel="noopener noreferrer">
+                <a href="https://github.com/Aditya00038" target="_blank" rel="noopener noreferrer">
                   <FaGithub />
                 </a>
-                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
+                <a href="https://www.instagram.com/_aditya_038/" target="_blank" rel="noopener noreferrer">
                   <FaInstagram />
                 </a>
               </div>
@@ -1602,15 +1333,116 @@ function App() {
 
       {/* Footer */}
       <footer className="footer">
-        <motion.div 
-          className="footer-content"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-        >
-          <p>© 2025 Aditya Suryawanshi. All rights reserved.</p>
-          <p>Built with ❤️ using React & Framer Motion</p>
-        </motion.div>
+        <div className="footer-container">
+          <motion.div 
+            className="footer-top"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="footer-section">
+              <h3 className="footer-brand">Aditya Suryawanshi</h3>
+              <p className="footer-tagline">Building innovative solutions driven by passion and creativity</p>
+              <div className="footer-social">
+                <motion.a 
+                  href="https://www.linkedin.com/in/aditya-suryawanshi-20b60930a/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.2, rotate: 5 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <FaLinkedinIn />
+                </motion.a>
+                <motion.a 
+                  href="https://github.com/Aditya00038" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.2, rotate: 5 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <FaGithub />
+                </motion.a>
+                <motion.a 
+                  href="https://www.instagram.com/_aditya_038/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.2, rotate: 5 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <FaInstagram />
+                </motion.a>
+                <motion.a 
+                  href="mailto:adityasuryawanshi038@gmail.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.2, rotate: 5 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <FaEnvelope />
+                </motion.a>
+              </div>
+            </div>
+
+            <div className="footer-section footer-links-section">
+              <h4>Quick Links</h4>
+              <ul className="footer-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#skills">Skills</a></li>
+                <li><a href="#projects">Projects</a></li>
+              </ul>
+            </div>
+
+            <div className="footer-section footer-services-section">
+              <h4>What I Do</h4>
+              <ul className="footer-links">
+                <li><a href="#projects">Web Development</a></li>
+                <li><a href="#projects">UI/UX Design</a></li>
+              </ul>
+            </div>
+
+            <div className="footer-section footer-contact-section">
+              <h4>Get In Touch</h4>
+              <ul className="footer-contact">
+                <li>
+                  <FaEnvelope />
+                  <a href="mailto:adityasuryawanshi038@gmail.com">adityasuryawanshi038@gmail.com</a>
+                </li>
+                <li>
+                  <FaPhoneAlt />
+                  <a href="tel:+918010340843">+91 8010340843</a>
+                </li>
+                <li>
+                  <FaMapMarkerAlt />
+                  <span>Pune, Maharashtra, India</span>
+                </li>
+              </ul>
+            </div>
+          </motion.div>
+
+          <motion.div 
+            className="footer-bottom"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+          >
+            <div className="footer-divider"></div>
+            <div className="footer-bottom-content">
+              <p className="footer-copyright">
+                © {new Date().getFullYear()} Aditya Suryawanshi. All rights reserved.
+              </p>
+              <p className="footer-built">
+                Built with <motion.span 
+                  animate={{ scale: [1, 1.2, 1] }} 
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                  style={{ display: 'inline-block', color: '#ff4444' }}
+                >❤️</motion.span> using React & Framer Motion
+              </p>
+            </div>
+          </motion.div>
+        </div>
       </footer>
     </div>
   );
