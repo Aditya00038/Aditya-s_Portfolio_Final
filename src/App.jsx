@@ -1060,6 +1060,17 @@ function App() {
                 variants={fadeInUp}
               >
                 <div className="github-graph">
+                  <div className="github-year-selector">
+                    <select 
+                      className="year-selector"
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(e.target.value)}
+                    >
+                      <option value="Current">Current</option>
+                      <option value="2025">2025</option>
+                      <option value="2024">2024</option>
+                    </select>
+                  </div>
                   <div className="contribution-months">
                     {getMonthLabels().map((month, i) => (
                       <span key={i}>{month}</span>

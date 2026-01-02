@@ -1898,6 +1898,34 @@ section {
   background: transparent;
 }
 
+.github-year-selector {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.github-year-selector .year-selector {
+  padding: 0.5rem 1rem;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  color: #c9d1d9;
+  font-size: 0.9rem;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.github-year-selector .year-selector:hover {
+  border-color: #58a6ff;
+  background: #1c2128;
+}
+
+.github-year-selector .year-selector:focus {
+  border-color: #58a6ff;
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+}
+
 .contribution-months {
   display: flex;
   justify-content: space-between;
@@ -1915,10 +1943,11 @@ section {
 .contribution-chart {
   width: 100%;
   padding-bottom: 10px;
+  overflow-x: auto;
 }
 
 .contribution-chart::-webkit-scrollbar {
-  height: 10px;
+  height: 8px;
 }
 
 .contribution-chart::-webkit-scrollbar-track {
@@ -1929,6 +1958,10 @@ section {
 .contribution-chart::-webkit-scrollbar-thumb {
   background: #484f58;
   border-radius: 5px;
+}
+
+.contribution-chart::-webkit-scrollbar-thumb:hover {
+  background: #6e7681;
 }
 
 .contribution-chart::-webkit-scrollbar-thumb:hover {
@@ -3131,32 +3164,40 @@ section {
     font-size: 0.75rem;
   }
 
-  /* Contribution grid mobile - bigger boxes */
+  /* Contribution grid mobile - bigger boxes and scrollable */
+  .contribution-chart {
+    overflow-x: scroll;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .contribution-wrapper {
-    gap: 2px;
+    gap: 3px;
+    min-width: max-content;
   }
 
   .day-labels {
-    width: 24px;
-    gap: 2px;
+    width: 26px;
+    gap: 3px;
   }
 
   .day-labels span {
-    height: 10px;
-    font-size: 0.55rem;
+    height: 13px;
+    font-size: 0.6rem;
   }
 
   .contribution-grid {
-    gap: 2px;
+    gap: 3px;
   }
 
   .contribution-week {
-    gap: 2px;
+    gap: 3px;
   }
 
   .contribution-day {
-    min-width: 10px;
-    min-height: 10px;
+    width: 13px;
+    height: 13px;
+    min-width: 13px;
+    min-height: 13px;
   }
 
   .github-graph-container,
@@ -3164,8 +3205,13 @@ section {
     padding: 1rem;
   }
 
+  .contribution-months {
+    min-width: max-content;
+    padding: 0 8px;
+  }
+
   .contribution-months span {
-    font-size: 0.6rem;
+    font-size: 0.65rem;
   }
 }
 
