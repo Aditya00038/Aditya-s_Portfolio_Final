@@ -73,6 +73,9 @@ import python1LearnImg from './assets/certificates/python1-learn.png';
 import python2LearnImg from './assets/certificates/python2-learn.png';
 import webdevLearnImg from './assets/certificates/webdev-learn.png';
 import sqlLearnImg from './assets/certificates/sql-learn.png';
+import GooeyNav from './components/GooeyNav';
+import BackToTop from './components/BackToTop';
+import { getProjectLikes, incrementProjectLike, decrementProjectLike } from './firebase';
 import './App.css';
 
 function App() {
@@ -81,12 +84,33 @@ function App() {
   const [activeTab, setActiveTab] = useState('github'); // 'github' or 'leetcode'
   const [showAllCerts, setShowAllCerts] = useState(false);
   const [aboutTab, setAboutTab] = useState('education'); // 'hackathon', 'education'
-  const [projectLikes, setProjectLikes] = useState({
-    0: { liked: false, count: 47 },
-    1: { liked: false, count: 23 },
-    2: { liked: false, count: 35 }
-  });
+  const [projectLikes, setProjectLikes] = useState({});
+  const [likesLoading, setLikesLoading] = useState(true);
   const [showMessagePopup, setShowMessagePopup] = useState(false);
+
+  // Project IDs for Firebase
+  const projectIds = ['hb-project', 'chemlab-manager', 'parivartan'];
+
+  // Fetch likes from Firebase on mount
+  useEffect(() => {
+    const fetchLikes = async () => {
+      try {
+        const likesData = {};
+        for (let i = 0; i < projectIds.length; i++) {
+          const count = await getProjectLikes(projectIds[i]);
+          // Check localStorage for user's liked status
+          const hasLiked = localStorage.getItem(`liked_${projectIds[i]}`) === 'true';
+          likesData[i] = { liked: hasLiked, count };
+        }
+        setProjectLikes(likesData);
+      } catch (error) {
+        console.error('Error fetching likes:', error);
+      } finally {
+        setLikesLoading(false);
+      }
+    };
+    fetchLikes();
+  }, []);
 
   // Handle contact form submission
   const handleFormSubmit = (e) => {
@@ -99,18 +123,51 @@ function App() {
     }, 3000);
   };
 
-  // Handle project like toggle
-  const handleProjectLike = (index) => {
-    setProjectLikes(prev => {
-      const currentLikes = prev[index];
-      return {
+  // Handle project like toggle with Firebase
+  const handleProjectLike = async (index) => {
+    const projectId = projectIds[index];
+    const currentLikes = projectLikes[index];
+    const isLiked = currentLikes?.liked;
+
+    // Optimistic update
+    setProjectLikes(prev => ({
+      ...prev,
+      [index]: {
+        liked: !isLiked,
+        count: isLiked ? (prev[index]?.count || 1) - 1 : (prev[index]?.count || 0) + 1
+      }
+    }));
+
+    try {
+      let newCount;
+      if (isLiked) {
+        // Unlike
+        newCount = await decrementProjectLike(projectId);
+        localStorage.removeItem(`liked_${projectId}`);
+      } else {
+        // Like
+        newCount = await incrementProjectLike(projectId);
+        localStorage.setItem(`liked_${projectId}`, 'true');
+      }
+
+      // Update with actual count from Firebase
+      if (newCount !== null) {
+        setProjectLikes(prev => ({
+          ...prev,
+          [index]: {
+            liked: !isLiked,
+            count: newCount
+          }
+        }));
+      }
+    } catch (error) {
+      console.error('Error updating like:', error);
+      // Revert on error
+      setProjectLikes(prev => ({
         ...prev,
-        [index]: {
-          liked: !currentLikes.liked,
-          count: currentLikes.liked ? currentLikes.count - 1 : currentLikes.count + 1
-        }
-      };
-    });
+        [index]: currentLikes
+      }));
+    }
   };
 
   // GitHub stats state
@@ -583,19 +640,23 @@ function App() {
           >
             As
           </motion.div>
-          <div className="nav-links">
-            {['Home', 'Projects', 'Skills', 'Certifications', 'Contact'].map((item) => (
-              <motion.button
-                key={item}
-                className={`nav-link ${activeSection === item.toLowerCase() ? 'active' : ''}`}
-                onClick={() => scrollToSection(item.toLowerCase())}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {item}
-              </motion.button>
-            ))}
-          </div>
+          <GooeyNav
+            items={[
+              { label: 'Home', href: '#home' },
+              { label: 'Projects', href: '#projects' },
+              { label: 'Skills', href: '#skills' },
+              { label: 'Certifications', href: '#certifications' },
+              { label: 'Contact', href: '#contact' }
+            ]}
+            initialActiveIndex={['home', 'projects', 'skills', 'certifications', 'contact'].indexOf(activeSection)}
+            onItemClick={(item) => scrollToSection(item.label.toLowerCase())}
+            animationTime={600}
+            particleCount={15}
+            particleDistances={[90, 10]}
+            particleR={100}
+            timeVariance={300}
+            colors={[1, 2, 3, 1, 2, 3, 1, 4]}
+          />
         </div>
       </motion.nav>
 
@@ -1005,18 +1066,28 @@ function App() {
                     ))}
                   </div>
                   <div className="contribution-chart">
-                    <div className="contribution-grid">
-                      {getWeeksData().map((week, weekIndex) => (
-                        <div key={weekIndex} className="contribution-week">
-                          {week.map((day, dayIndex) => (
-                            <div 
-                              key={dayIndex} 
-                              className={`contribution-day level-${getContributionLevel(day.count)}`}
-                              title={`${day.count} contributions on ${day.date}`}
-                            />
-                          ))}
-                        </div>
-                      ))}
+                    <div className="contribution-wrapper">
+                      <div className="day-labels">
+                        <span></span>
+                        <span>Mon</span>
+                        <span></span>
+                        <span>Wed</span>
+                        <span></span>
+                        <span>Fri</span>
+                        <span></span>
+                      </div>
+                      <div className="contribution-grid">
+                        {getWeeksData().map((week, weekIndex) => (
+                          <div key={weekIndex} className="contribution-week">
+                            {week.map((day, dayIndex) => (
+                              <div 
+                                key={dayIndex} 
+                                className={`contribution-day level-${getContributionLevel(day.count)}`}
+                              />
+                            ))}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                   <div className="graph-footer">
@@ -1099,18 +1170,28 @@ function App() {
                     ))}
                   </div>
                   <div className="contribution-chart">
-                    <div className="contribution-grid">
-                      {getLeetcodeWeeksData().map((week, weekIndex) => (
-                        <div key={weekIndex} className="contribution-week">
-                          {week.map((day, dayIndex) => (
-                            <div 
-                              key={dayIndex} 
-                              className={`contribution-day leetcode-day level-${getContributionLevel(day.count)}`}
-                              title={`${day.count} submissions on ${day.date}`}
-                            />
-                          ))}
-                        </div>
-                      ))}
+                    <div className="contribution-wrapper">
+                      <div className="day-labels">
+                        <span></span>
+                        <span>Mon</span>
+                        <span></span>
+                        <span>Wed</span>
+                        <span></span>
+                        <span>Fri</span>
+                        <span></span>
+                      </div>
+                      <div className="contribution-grid">
+                        {getLeetcodeWeeksData().map((week, weekIndex) => (
+                          <div key={weekIndex} className="contribution-week">
+                            {week.map((day, dayIndex) => (
+                              <div 
+                                key={dayIndex} 
+                                className={`contribution-day leetcode-day level-${getContributionLevel(day.count)}`}
+                              />
+                            ))}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                   <div className="leetcode-calendar-header">
@@ -1444,6 +1525,9 @@ function App() {
           </motion.div>
         </div>
       </footer>
+
+      {/* Back to Top Button - Mobile Only */}
+      <BackToTop />
     </div>
   );
 }
