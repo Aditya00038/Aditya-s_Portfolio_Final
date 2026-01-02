@@ -3130,6 +3130,43 @@ section {
   .spotify-artist {
     font-size: 0.75rem;
   }
+
+  /* Contribution grid mobile - bigger boxes */
+  .contribution-wrapper {
+    gap: 2px;
+  }
+
+  .day-labels {
+    width: 24px;
+    gap: 2px;
+  }
+
+  .day-labels span {
+    height: 10px;
+    font-size: 0.55rem;
+  }
+
+  .contribution-grid {
+    gap: 2px;
+  }
+
+  .contribution-week {
+    gap: 2px;
+  }
+
+  .contribution-day {
+    min-width: 10px;
+    min-height: 10px;
+  }
+
+  .github-graph-container,
+  .leetcode-calendar {
+    padding: 1rem;
+  }
+
+  .contribution-months span {
+    font-size: 0.6rem;
+  }
 }
 
 @media (max-width: 480px) {
